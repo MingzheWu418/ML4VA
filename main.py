@@ -14,6 +14,12 @@ salary_list = [
     "2014-2015_salary_report.csv",
     "2015-2016_salary_report.csv"]
 
+# TODO: Fill in these data
+manually_input_list = [
+    "2016-2017_salary_report.csv",
+    "2017-2018_salary_report.csv",
+    "2018-2019_salary_report.csv"
+]
 
 def read_name(file_name="./Data/VA_Income.xls"):
     """
@@ -82,9 +88,6 @@ def read_income():
     return df_splited
 
 
-df_splited = read_income()
-
-
 # print(df_splited.iloc[0].columns)
 # for item in df_splited.columns:
 #     print(item)
@@ -97,21 +100,27 @@ def comb_dataset():
     # Save X and y into the same dataframe
     # And group by year
     df = pd.read_csv("./Data/cohort_statistics.csv")
-
     # For the sake of simplicity, only consider Graduation Rate and Dropout Rate for now
     df = df[["Cohort Year", "Division", "Division Name", "Graduation Rate", "Dropout Rate"]]
     graduation_by_year = group_by_year(df)
     for index in range(12):
         cohort_year = index + 2008
         # Combining mean income
+        income_df = read_income()
         graduation_by_year[cohort_year]["Mean Income"] = graduation_by_year[cohort_year]["Division Name"].map(
-            df_splited.loc[index + 1].to_dict())
+            income_df.loc[index + 1].to_dict())
 
         # Combining teacher salary
-        df = pd.merge(graduation_by_year[cohort_year], read_salary(salary_list[index]), on='Division').drop(columns=["Name"])
-        df = df.iloc[:, :-2]
-        df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
-    return graduation_by_year
+        if index <= 8:
+            df = pd.merge(graduation_by_year[cohort_year], read_salary(salary_list[index]), on='Division').drop(columns=["Name"])
+            df = df.iloc[:, :-2]
+            df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
+        # After data from 2016-2020 is filled in, enable this part
+        # else:
+        #     df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index-9]), on='Division')
+        #     df = df.iloc[:, :-2]
+        #     df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
+    return df
 
 
 if __name__ == "__main__":

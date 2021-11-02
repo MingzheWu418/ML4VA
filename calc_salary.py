@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import re
 
 salary_list = [
     "2007-2008_salary_report.csv",
@@ -11,6 +12,10 @@ salary_list = [
     "2013-2014_salary_report.csv",
     "2014-2015_salary_report.csv",
     "2015-2016_salary_report.csv"]
+
+manually_input_list = [
+    "2017-2018_salary_report.csv"
+]
 
 
 # Previously written because 2015-2016 has different format,
@@ -60,8 +65,38 @@ def read_salary(filename):
     return salary.drop(columns=["Unnamed: 0"])
 
 
+def txt_to_csv(filename):
+    with open(filename, "r") as file:
+        filedata = file.read()
+    filedata = filedata.replace(',', '')
+    filedata = re.sub("[a-zA-Z]+ ", "", filedata)
+    filedata = filedata.replace(' ', ',')
+    with open("Data/TeacherSalary/csv_transformed/2017-2018_salary_report.csv", 'w') as file:
+        file.write(filedata)
+
+
+def open_manual_csv(filename):
+    salary = pd.read_csv(filename, header=None)
+    for i in range(salary.shape[0]):
+        for item in salary.columns:
+            if salary[item][i].find("%") != -1:
+                if salary[item][i].find("(") != -1:
+                    # print(xl[item][i])
+                    salary[item][i] = -float(salary[item][i].strip("()%"))
+                else:
+                    salary[item][i] = float(salary[item][i].strip(" %"))
+                # print(xl[item][i])
+            elif salary[item][i].find(",") != -1:
+                salary[item][i] = float(salary[item][i].replace(",", ""))
+    return salary
+
+
 if __name__ == "__main__":
     # pass
-    for item in salary_list:
-        dataframe = convert_salary(item)
-        dataframe.to_csv(path_or_buf=("./Data/TeacherSalary/csv_transformed/" + item))
+    # txt_to_csv("./Data/TeacherSalary/csv_transformed/test.txt")
+    dataframe = open_manual_csv("./Data/TeacherSalary/csv_original/2017-2018_salary_report.csv")
+    dataframe.to_csv(path_or_buf="./Data/TeacherSalary/csv_transformed/2017-2018_salary_report.csv")
+
+    # for item in salary_list:
+    #     dataframe = convert_salary(item)
+    #     dataframe.to_csv(path_or_buf=("./Data/TeacherSalary/csv_transformed/" + item))
