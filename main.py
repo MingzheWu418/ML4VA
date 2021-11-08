@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 from calc_salary import read_salary
-
+import os
+import glob
 
 salary_list = [
     "2007-2008_salary_report.csv",
@@ -20,6 +21,7 @@ manually_input_list = [
     "2017-2018_salary_report.csv",
     "2018-2019_salary_report.csv"
 ]
+
 
 def read_name(file_name="./Data/VA_Income.xls"):
     """
@@ -56,20 +58,11 @@ def read_name(file_name="./Data/VA_Income.xls"):
     return name_list
 
 
-def group_by_year(dataframe):
-    year_dict = {}
-    # Here we only keep data between 2008 and 2019 because many statistics of 2020 and 2021 are yet to be established
-    for index in range(12):
-        year_dict[index + 2008] = dataframe.loc[dataframe["Cohort Year"] == (index + 2008)].sort_values(
-            by=['Division']).reset_index().drop(columns="index")
-    return year_dict
-
-
-# print(df.loc[df["Cohort Year"] == 2008])
-# print(df.groupby(["Division"]))
-
 # Handle income
 def read_income():
+    """
+    :return: the mean income per capita for each county
+    """
     name_list = read_name()
     income_df = pd.read_excel(io="./Data/VA_Income.xls", sheet_name="Annual")
     # print(df)
@@ -83,9 +76,20 @@ def read_income():
     df_splited.columns = sum(s.tolist(), [])
     df_splited = df_splited.rename(columns=lambda x: x.strip())
     # df_splited = df_splited.sort_index(axis=1)
-
-    # print(df_splited)
     return df_splited
+
+
+def group_by_year(dataframe):
+    year_dict = {}
+    # Here we only keep data between 2008 and 2019 because many statistics of 2020 and 2021 are yet to be established
+    for index in range(12):
+        year_dict[index + 2008] = dataframe.loc[dataframe["Cohort Year"] == (index + 2008)].sort_values(
+            by=['Division']).reset_index().drop(columns="index")
+    return year_dict
+
+
+# print(df.loc[df["Cohort Year"] == 2008])
+# print(df.groupby(["Division"]))
 
 
 # print(df_splited.iloc[0].columns)
@@ -112,9 +116,11 @@ def comb_dataset():
 
         # Combining teacher salary
         if index <= 8:
-            df = pd.merge(graduation_by_year[cohort_year], read_salary(salary_list[index]), on='Division').drop(columns=["Name"])
+            df = pd.merge(graduation_by_year[cohort_year], read_salary(salary_list[index]), on='Division').drop(
+                columns=["Name"])
             df = df.iloc[:, :-2]
             df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
+
         # After data from 2016-2020 is filled in, enable this part
         # else:
         #     df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index-9]), on='Division')
@@ -123,7 +129,25 @@ def comb_dataset():
     return df
 
 
+def comb_years():
+    os.chdir("./Data/test")
+    extension = 'csv'
+    all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+    # combine all files in the list
+    df_list = []
+    for f in all_filenames:
+        df = pd.read_csv(f)
+        df = df.rename(
+            columns={list(df)[7]: "Prev_year_salary", list(df)[8]: "Curr_year_salary", list(df)[9]: "salary_diff"})
+        df_list.append(df)
+        # print(pd.read_csv(f) for f in all_filenames)
+    combined_csv = pd.concat(df_list)
+    # #export to csv
+    combined_csv.to_csv("graduation.csv", index=False, encoding='utf-8-sig')
+
+
 if __name__ == "__main__":
-    dataset = comb_dataset()
-    print(dataset)
+    # dataset = comb_dataset()
+    # print(dataset)
     # print(read_salary(salary_list[0]))
+    comb_years()
