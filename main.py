@@ -18,8 +18,7 @@ salary_list = [
 # TODO: Fill in these data
 manually_input_list = [
     "2016-2017_salary_report.csv",
-    "2017-2018_salary_report.csv",
-    "2018-2019_salary_report.csv"
+    "2017-2018_salary_report.csv"
 ]
 
 
@@ -105,7 +104,7 @@ def comb_dataset():
     # And group by year
     df = pd.read_csv("./Data/cohort_statistics.csv")
     # For the sake of simplicity, only consider Graduation Rate and Dropout Rate for now
-    df = df[["Cohort Year", "Division", "Division Name", "Graduation Rate", "Dropout Rate"]]
+    df = df[["Cohort Year", "Division", "Division Name", "Students in Cohort", "Graduation Rate", "Dropout Rate"]]
     graduation_by_year = group_by_year(df)
     for index in range(12):
         cohort_year = index + 2008
@@ -122,10 +121,10 @@ def comb_dataset():
             df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
 
         # After data from 2016-2020 is filled in, enable this part
-        # else:
-        #     df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index-9]), on='Division')
-        #     df = df.iloc[:, :-2]
-        #     df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
+        else:
+            df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index-9]), on='Division')
+            df = df.iloc[:, :-2]
+            df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
     return df
 
 
@@ -138,12 +137,12 @@ def comb_years():
     for f in all_filenames:
         df = pd.read_csv(f)
         df = df.rename(
-            columns={list(df)[7]: "Prev_year_salary", list(df)[8]: "Curr_year_salary", list(df)[9]: "salary_diff"})
+            columns={list(df)[8]: "prev_year_teacher_salary", list(df)[9]: "curr_year_teacher_salary", list(df)[10]: "teacher_salary_diff"})
         df_list.append(df)
         # print(pd.read_csv(f) for f in all_filenames)
     combined_csv = pd.concat(df_list)
     # #export to csv
-    combined_csv.to_csv("graduation.csv", index=False, encoding='utf-8-sig')
+    combined_csv.to_csv("graduation_ver_4.csv", index=False, encoding='utf-8-sig')
 
 
 if __name__ == "__main__":
