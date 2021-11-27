@@ -59,7 +59,7 @@ def read_name(file_name="./Data/VA_Income.xls"):
 
 
 # Handle income
-def read_income():
+def save_income():
     """
     :return: the mean income per capita for each county
     """
@@ -76,6 +76,7 @@ def read_income():
     df_splited.columns = sum(s.tolist(), [])
     df_splited = df_splited.rename(columns=lambda x: x.strip())
     # df_splited = df_splited.sort_index(axis=1)
+    df_splited.to_csv("./Data/income/income.csv", index=False, encoding='utf-8-sig')
     return df_splited
 
 
@@ -85,6 +86,18 @@ def read_population():
 
 def read_population_increase():
     return pd.read_csv("Data/population/percent_inc.csv")
+
+
+def read_rental_price():
+    return pd.read_csv("Data/housing_price/rental_price_fixed.csv")
+
+
+def read_rental_increase():
+    return pd.read_csv("Data/housing_price/rental_price_increase_fixed.csv")
+
+
+def read_income():
+    return pd.read_csv("Data/income/income_fixed.csv")
 
 
 def group_by_year(dataframe):
@@ -122,6 +135,8 @@ def comb_dataset():
         income_df = read_income()
         pop_df = read_population()
         increase_df = read_population_increase()
+        rental_df = read_rental_price()
+        rental_inc_df = read_rental_increase()
         # print("-----")
         # print(income_df)
         # print(graduation_by_year)
@@ -132,7 +147,13 @@ def comb_dataset():
             pop_df.loc[index + 1].to_dict())
 
         graduation_by_year[cohort_year]["population_increase"] = graduation_by_year[cohort_year]["Division Name"].map(
-            increase_df.loc[index + 1].to_dict())
+            increase_df.loc[index].to_dict())
+
+        graduation_by_year[cohort_year]["rental_price"] = graduation_by_year[cohort_year]["Division Name"].map(
+            rental_df.loc[index + 1].to_dict())
+
+        graduation_by_year[cohort_year]["rental_increase"] = graduation_by_year[cohort_year]["Division Name"].map(
+            rental_inc_df.loc[index].to_dict())
 
         # print(graduation_by_year)
 
@@ -160,26 +181,28 @@ def comb_years():
     for f in all_filenames:
         df = pd.read_csv(f)
         df = df.rename(
-            columns={list(df)[10]: "prev_year_teacher_salary", list(df)[11]: "curr_year_teacher_salary",
-                     list(df)[12]: "teacher_salary_diff"})
+            columns={list(df)[-3]: "prev_year_teacher_salary", list(df)[-2]: "curr_year_teacher_salary",
+                     list(df)[-1]: "teacher_salary_diff"})
         df_list.append(df)
         # print(pd.read_csv(f) for f in all_filenames)
     combined_csv = pd.concat(df_list)
-    # #export to csv
-    combined_csv.to_csv("../graduation_ver_5.csv", index=False, encoding='utf-8-sig')
+    # export to csv
+
+    combined_csv.to_csv("../graduation_ver_8.csv", index=False, encoding='utf-8-sig')
 
 
 def num_students_to_int():
-    df = pd.read_csv("Data/graduation_ver_5.csv")
+    df = pd.read_csv("Data/graduation_ver_8.csv")
     for i in range(df.shape[0]):
         try:
             df["Students in Cohort"][i] = int(df["Students in Cohort"][i].replace(",", ""))
         except:
             print(df["Students in Cohort"][i])
-    df.to_csv("./Data/graduation_ver_5.csv", index=False, encoding='utf-8-sig')
+    df.to_csv("./Data/graduation_ver_8.csv", index=False, encoding='utf-8-sig')
 
 
 if __name__ == "__main__":
+    # save_income()
     # read_name()
     # dataset = comb_dataset()
     # print(dataset)

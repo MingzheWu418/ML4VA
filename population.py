@@ -3,7 +3,7 @@ import pandas as pd
 
 def read_population():
     """
-    :return: the mean income per capita for each county
+    :return: population by county and year, population increase (from previous year) by county and year
     """
     pop_df = pd.read_excel(io="./Data/VA-Intercensal-Estimates_2000-2010.xls")
     # df_header = pop_df[2]
@@ -29,7 +29,7 @@ def read_population():
 
     pop_df.to_csv(path_or_buf=("./Data/test/populationT.csv"))
     increase_df.to_csv(path_or_buf=("./Data/test/percent_inc.csv"))
-
+    return pop_df, increase_df
 
 if __name__ == "__main__":
     read_population()
