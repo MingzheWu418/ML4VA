@@ -18,7 +18,8 @@ salary_list = [
 # TODO: Fill in these data
 manually_input_list = [
     "2016-2017_salary_report.csv",
-    "2017-2018_salary_report.csv"
+    "2017-2018_salary_report.csv",
+    "2018-2019_salary_report.csv"
 ]
 
 
@@ -52,7 +53,7 @@ def read_name(file_name="./Data/VA_Income.xls"):
             i += 27
         i += 1
 
-    # See name_dict
+    # check name_dict
     # print(name_list)
     return name_list
 
@@ -78,6 +79,14 @@ def read_income():
     return df_splited
 
 
+def read_population():
+    return pd.read_csv("Data/population/populationT.csv")
+
+
+def read_population_increase():
+    return pd.read_csv("Data/population/percent_inc.csv")
+
+
 def group_by_year(dataframe):
     year_dict = {}
     # Here we only keep data between 2008 and 2019 because many statistics of 2020 and 2021 are yet to be established
@@ -99,6 +108,7 @@ def group_by_year(dataframe):
 
 # print(df_splited.loc[12])
 
+
 def comb_dataset():
     # Save X and y into the same dataframe
     # And group by year
@@ -110,8 +120,21 @@ def comb_dataset():
         cohort_year = index + 2008
         # Combining mean income
         income_df = read_income()
-        graduation_by_year[cohort_year]["Mean Income"] = graduation_by_year[cohort_year]["Division Name"].map(
+        pop_df = read_population()
+        increase_df = read_population_increase()
+        # print("-----")
+        # print(income_df)
+        # print(graduation_by_year)
+        graduation_by_year[cohort_year]["income_per_capita"] = graduation_by_year[cohort_year]["Division Name"].map(
             income_df.loc[index + 1].to_dict())
+
+        graduation_by_year[cohort_year]["population"] = graduation_by_year[cohort_year]["Division Name"].map(
+            pop_df.loc[index + 1].to_dict())
+
+        graduation_by_year[cohort_year]["population_increase"] = graduation_by_year[cohort_year]["Division Name"].map(
+            increase_df.loc[index + 1].to_dict())
+
+        # print(graduation_by_year)
 
         # Combining teacher salary
         if index <= 8:
@@ -122,7 +145,7 @@ def comb_dataset():
 
         # After data from 2016-2020 is filled in, enable this part
         else:
-            df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index-9]), on='Division')
+            df = pd.merge(graduation_by_year[cohort_year], read_salary(manually_input_list[index - 9]), on='Division')
             df = df.iloc[:, :-2]
             df.to_csv(path_or_buf=("./Data/test/" + str(cohort_year) + ".csv"))
     return df
@@ -137,16 +160,28 @@ def comb_years():
     for f in all_filenames:
         df = pd.read_csv(f)
         df = df.rename(
-            columns={list(df)[8]: "prev_year_teacher_salary", list(df)[9]: "curr_year_teacher_salary", list(df)[10]: "teacher_salary_diff"})
+            columns={list(df)[10]: "prev_year_teacher_salary", list(df)[11]: "curr_year_teacher_salary",
+                     list(df)[12]: "teacher_salary_diff"})
         df_list.append(df)
         # print(pd.read_csv(f) for f in all_filenames)
     combined_csv = pd.concat(df_list)
     # #export to csv
-    combined_csv.to_csv("graduation_ver_4.csv", index=False, encoding='utf-8-sig')
+    combined_csv.to_csv("../graduation_ver_5.csv", index=False, encoding='utf-8-sig')
+
+
+def num_students_to_int():
+    df = pd.read_csv("Data/graduation_ver_5.csv")
+    for i in range(df.shape[0]):
+        try:
+            df["Students in Cohort"][i] = int(df["Students in Cohort"][i].replace(",", ""))
+        except:
+            print(df["Students in Cohort"][i])
+    df.to_csv("./Data/graduation_ver_5.csv", index=False, encoding='utf-8-sig')
 
 
 if __name__ == "__main__":
+    # read_name()
     # dataset = comb_dataset()
     # print(dataset)
-    # print(read_salary(salary_list[0]))
-    comb_years()
+    # comb_years()
+    num_students_to_int()

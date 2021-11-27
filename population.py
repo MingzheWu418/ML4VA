@@ -5,36 +5,30 @@ def read_population():
     """
     :return: the mean income per capita for each county
     """
-    pop_df = pd.read_excel(io="./Data/co-est2019-cumchg-51.xlsx")
-    pop_df = pop_df[5:138].iloc[:, :-4]
-    pop_df = pop_df.rename(
-        columns={list(pop_df)[0]: "county",
-                 list(pop_df)[1]: "population_2010",
-                 list(pop_df)[2]: "population_2019",
-                 list(pop_df)[3]: "population_change",
-                 list(pop_df)[4]: "population_percent_change"})
-    pop_df = pop_df.reset_index().drop(columns=["index"])
-    # print(pop_df["county"])
-    for i in range(pop_df.shape[0]):
-        # print(i)
-        # print(pop_df["county"][i])
-        pop_df["county"][i] = pop_df["county"][i].strip(".").split(", ")[0]
-    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    #     print(pop_df)
-    return pop_df
+    pop_df = pd.read_excel(io="./Data/VA-Intercensal-Estimates_2000-2010.xls")
+    # df_header = pop_df[2]
+    # print(pop_df.columns)
+    pop_df = pop_df.drop(columns="2000 Census").iloc[3:, 1:]
+    pop_df2 = pd.read_excel(io="./Data/VA-Intercensal-Estimates_2010-2020_UVA-CooperCenter.xls")
+    pop_df2 = pop_df2.drop(columns=[2010, "2010 Census", "Locality"]).iloc[3:, 1:]
+    pop_df = pd.concat([pop_df, pop_df2], axis=1).reset_index().drop(columns="index")
+    # print(pop_df[2001]/pop_df[2000])
+    # print(pop_df[pop_df.index.duplicated()])
+    increase_df = pop_df[["Locality"]].copy()
+    for i in range(2001, 2021):
+        increase_df[i] = 100*(pop_df[i]/pop_df[i-1]-1)
+    pop_df = pop_df.T
+    new_header = pop_df.iloc[0]
+    pop_df = pop_df[1:].astype(int)
+    pop_df.columns = new_header
 
-    # pop_df =
-    # df_dict = {}
-    # df_columns = income_df.columns
-    # for j in range(len(income_df.columns) - 1):
-    #     df_dict[df_columns[j + 1]] = name_list[j][1]
-    # df_renamed = income_df.rename(columns=df_dict)
-    # s = df_renamed.columns.str.split('+')
-    # df_splited = df_renamed.reindex(columns=df_renamed.columns.repeat(s.str.len()))
-    # df_splited.columns = sum(s.tolist(), [])
-    # df_splited = df_splited.rename(columns=lambda x: x.strip())
-    # # df_splited = df_splited.sort_index(axis=1)
-    # return df_splited
+    increase_df = increase_df.T
+    inc_new_header = increase_df.iloc[0]
+    increase_df = increase_df[1:]
+    increase_df.columns = inc_new_header
+
+    pop_df.to_csv(path_or_buf=("./Data/test/populationT.csv"))
+    increase_df.to_csv(path_or_buf=("./Data/test/percent_inc.csv"))
 
 
 if __name__ == "__main__":
